@@ -1,9 +1,10 @@
 import React from "react";
+import DashboardHome from "./ProductPage";
 
 const ProductAdd = () => {
   return (
     <div>
-      <h2>Product Addding</h2>
+      <DashboardHome />
     </div>
   );
 };

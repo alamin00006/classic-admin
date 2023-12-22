@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import Dashboard from "./Dashboard/Dashboard";
-import ProductAdd from "./Dashboard/ProductAdd";
+import ProductAdd from "./Dashboard/Product/ProductAdd";
+import Category from "./Dashboard/Category/CategoryAdd";
+import ProductPage from "./Dashboard/Product/ProductPage";
 
 function App() {
   return (
@@ -8,13 +10,10 @@ function App() {
       <h1 className="text-danger">Hello Al Amin</h1>
 
       <Routes>
-        {/* <Route path="/" element={<Dashboard></Dashboard>}></Route> */}
-
-        <Route path="/side-navbar" element={<Dashboard></Dashboard>}>
-          {/* <Route index element={<Dashboard></Dashboard>}></Route> */}
+        <Route path="/dashboard" element={<Dashboard></Dashboard>}>
+          <Route index element={<ProductPage></ProductPage>}></Route>
           <Route path="product-add" element={<ProductAdd></ProductAdd>}></Route>
-          {/* <Route path="support" element={<Support></Support>}></Route>
-          <Route path="product-page" element={<ProductManage />}></Route> */}
+          <Route path="category" element={<Category></Category>}></Route>
         </Route>
       </Routes>
     </div>

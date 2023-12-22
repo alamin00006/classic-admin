@@ -2,11 +2,7 @@ import React, { useEffect } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import useSingleUser from "../Hooks/useSingleUser";
 import DashboardIcon from "../svgIcons/DashboardIcon";
-// import LoveIcon from "../../svgIcons/LoveIcon";
-// import OrderIcon from "../../svgIcons/OrderIcon";
-// import ProfileIcon from "../../svgIcons/ProfileIcon";
-
-// import AdminAccess from "./AdminAccess";
+import { MdOutlineBookmarkAdd, MdOutlineDensityMedium } from "react-icons/md";
 
 // import Loading from "../../Pages/Loading/Loading";
 
@@ -33,7 +29,6 @@ const Dashboard = () => {
       <div className="row bg-white">
         <div className="col-lg-3 col-md-3 col-sm-12 border">
           <div className="py-3">
-            <h5 className="px-2">আমার একাউন্ট</h5>
             <ul className="px-2 py-3">
               <li className="list-unstyled d-flex align-items-center">
                 <div className="">
@@ -41,10 +36,10 @@ const Dashboard = () => {
                 </div>
                 <div className="ms-2">
                   <Link
-                    to="/side-navbar"
+                    to="/dashboard"
                     className="text-decoration-none text-black "
                   >
-                    ড্যাশবোর্ড
+                    Dashboard
                   </Link>
                 </div>
               </li>
@@ -52,58 +47,33 @@ const Dashboard = () => {
               {/* <AdminAccess refetch={refetch} /> */}
 
               <li className="list-unstyled d-flex align-items-center mt-4">
-                <div>{/* <OrderIcon /> */}</div>
+                <div>
+                  <MdOutlineBookmarkAdd
+                    style={{ width: "25px", height: "25px" }}
+                  />
+                </div>
                 <div className="ms-2">
                   <Link
-                    to="/side-navbar/product-add"
+                    to="/dashboard/product-add"
                     className="text-decoration-none text-black"
                   >
-                    Product Add
+                    Product
                   </Link>
                 </div>
               </li>
+
               <li className="list-unstyled d-flex align-items-center mt-4">
-                <div>{/* <ProfileIcon /> */}</div>
-                <div className="ms-2">
-                  <Link
-                    to="/side-navbar/user-profile"
-                    className="text-decoration-none text-black"
-                  >
-                    প্রোফাইল
-                  </Link>
+                <div>
+                  <MdOutlineDensityMedium
+                    style={{ width: "25px", height: "25px" }}
+                  />
                 </div>
-              </li>
-              <li className="list-unstyled d-flex align-items-center mt-4">
-                <div>{/* <LoveIcon /> */}</div>
                 <div className="ms-2">
                   <Link
-                    to="/up-comming"
+                    to="/dashboard/category"
                     className="text-decoration-none text-black"
                   >
-                    ইচ্ছেতালিকা
-                  </Link>
-                </div>
-              </li>
-              <li className="list-unstyled d-flex align-items-center mt-4">
-                <div>{/* <QuestionIcon /> */}</div>
-                <div className="ms-2">
-                  <Link
-                    to="/side-navbar/support"
-                    className="text-decoration-none text-black"
-                  >
-                    সাপোর্ট
-                  </Link>
-                </div>
-              </li>
-              <li className="list-unstyled d-flex align-items-center mt-4">
-                <div>{/* <SingOutIcon /> */}</div>
-                <div className="ms-2">
-                  <Link
-                    onClick={SingOutHandle}
-                    to="/"
-                    className="text-decoration-none text-black"
-                  >
-                    লগ আউট
+                    Category
                   </Link>
                 </div>
               </li>
