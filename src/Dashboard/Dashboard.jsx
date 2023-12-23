@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import useSingleUser from "../Hooks/useSingleUser";
 import DashboardIcon from "../svgIcons/DashboardIcon";
-import { MdOutlineBookmarkAdd, MdOutlineDensityMedium } from "react-icons/md";
-
-// import Loading from "../../Pages/Loading/Loading";
+import { MdOutlineBookmarkAdd } from "react-icons/md";
+import { IoIosLogOut } from "react-icons/io";
 
 const Dashboard = () => {
   const [user, refetch, isLoading] = useSingleUser();
@@ -14,16 +13,9 @@ const Dashboard = () => {
   const SingOutHandle = () => {
     localStorage.removeItem("token");
     refetch();
+    navigate("/");
   };
-  //   if (isLoading) {
-  //     <Loading></Loading>;
-  //   }
 
-  //   useEffect(() => {
-  //     if (!token) {
-  //       return navigate("/");
-  //     }
-  //   }, [token, navigate]);
   return (
     <div className="container">
       <div className="row bg-white">
@@ -61,19 +53,16 @@ const Dashboard = () => {
                   </Link>
                 </div>
               </li>
-
               <li className="list-unstyled d-flex align-items-center mt-4">
                 <div>
-                  <MdOutlineDensityMedium
-                    style={{ width: "25px", height: "25px" }}
-                  />
+                  <IoIosLogOut style={{ width: "25px", height: "25px" }} />
                 </div>
-                <div className="ms-2">
+                <div className="ms-2" onClick={SingOutHandle}>
                   <Link
-                    to="/dashboard/category"
+                    to="/dashboard/product-add"
                     className="text-decoration-none text-black"
                   >
-                    Category
+                    Log-out
                   </Link>
                 </div>
               </li>

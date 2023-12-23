@@ -1,160 +1,119 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Modal } from "react-bootstrap";
-import { toast } from "react-toastify";
-import useCategories from "../../Hooks/useCategories";
 import addProduct from "./ProductPage.module.css";
-
+import { FiPlus } from "react-icons/fi";
+import { AiOutlineDelete } from "react-icons/ai";
+import { ToastContainer, toast } from "react-toastify";
 const AddProductModal = ({ refetch, show, handleClose }) => {
-  const [discount, setDiscount] = useState("0");
-  const [image, setImage] = useState([]);
+  const [sizeWise, setSizeWise] = useState([]);
+  // Size Wise Product Details
+  useEffect(() => {
+    setSizeWise([
+      {
+        size: "S",
+        color: "Black",
+        price: "",
+        quantity: "",
+        photos: [],
+      },
+    ]);
+  }, []);
 
-  const [categories] = useCategories();
+  console.log("sizeWise", sizeWise);
+  const formRef = useRef(null);
 
-  const [tags, setTags] = useState([]);
-
-  const handleKeyDown = (e) => {
-    if (e.key !== "Enter") return;
-    const value = e.target.value;
-    //  console.log(value)
-    if (!value.trim()) return;
-    setTags([...tags, value]);
-    e.target.value = "";
+  const handleAddSizeWise = () => {
+    setSizeWise([
+      ...sizeWise,
+      {
+        size: "S",
+        color: "Black",
+        price: "",
+        quantity: "",
+        photos: [],
+      },
+    ]);
+  };
+  const handleSizeWisePhotosChange = (e, index) => {
+    const updatedOptions = [...sizeWise];
+    updatedOptions[index].photos = e.target.files;
+    setSizeWise(updatedOptions);
   };
 
-  const removeTag = (index) => {
-    setTags(tags.filter((el, i) => i !== index));
+  const handleRemoveSizeWise = (index) => {
+    if (sizeWise.length === 1) {
+      toast.warn("Sorry ! Minimum 1 Size Variation Required");
+      return;
+    }
+    const updatedOptions = sizeWise.filter((_, idx) => idx !== index);
+    setSizeWise(updatedOptions);
   };
 
-  const handleNewProduct = async (e) => {
-    e.preventDefault();
-    if (tags.length > 5) {
-      return toast("5 Tags more than not allowed");
-    }
-    //  console.log(productPdf)
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    console.log(sizeWise);
 
-    if (e.target.status.value === "Select A Status") {
-      return toast.error("Please Select Product Status");
-    }
-
-    if (e.target.categoryName.value === "Select A Category") {
-      return toast.error("Please Select A Category Name");
-    }
-
-    if (e.target.writerName.value === "Select A Writer") {
-      return toast.error("Please Select Product Writer");
-    }
-    if (e.target.publicationName.value === "Select A Publication") {
-      return toast.error("Please Select Product Publication");
-    }
-
-    const selectedCategory = categories.data.find(
-      (categoryName) => categoryName.name === e.target.categoryName.value
+    const selectedSizeOptions = sizeWise?.filter(
+      (option) =>
+        option.size &&
+        option.color &&
+        option.price &&
+        option.quantity &&
+        option.photos
     );
 
-    const isValidFileUploaded = (file) => {
-      const validExtensions = [
-        "png",
-        "jpeg",
-        "jpg",
-        "PNG",
-        "JPG",
-        "jpeg",
-        "JPEG",
-        "webp",
-      ];
-      const fileExtension = file.type.split("/")[1];
-      return validExtensions.includes(fileExtension);
+    const allData = {
+      productTitle: formData.get("productTitle"),
+      categoryName: formData.get("categoryName"),
+      description: formData.get("description"),
+
+      sizeVariation: selectedSizeOptions,
     };
-    // const isValidPdfFile = (file) => {
-    //   const validExtensions = ["pdf", "PDF"];
-    //   const fileExtension = file?.type?.split("/")[1];
-    //   return validExtensions.includes(fileExtension);
-    // };
 
-    if (image?.length > 1) {
-      return toast.error("please provide one book picture");
-    }
-    const file = image[0];
+    try {
+      const sizeWisePhotoList = await Promise.all(
+        sizeWise.map(async (option) => {
+          const photos = option.photos;
+          const photoUrls = await Promise.all(
+            Object.values(photos).map(async (file) => {
+              const data = new FormData();
+              data.append("file", file);
+              data.append("upload_preset", "upload");
+              const uploadRes = await axios.post(
+                "https://api.cloudinary.com/v1_1/dtpvtjiry/image/upload",
+                data
+              );
 
-    // if (productPdf.length > 1) {
-    //   return toast.error("please provide one pdf file");
-    // }
+              const { url } = uploadRes.data;
+              return url;
+            })
+          );
+          return photoUrls;
+        })
+      );
 
-    // const pdf = productPdf[0];
+      const product = {
+        ...allData,
 
-    // if (pdf.size > 5000000) {
-    //   return toast.error("pdf file size 5MB more than not allowed");
-    // } else {
-    //   if (isValidPdfFile(pdf)) {
-    //     Array.from(productPdf)?.forEach((item) => {
-    //       formData.append("pdf", item);
-    //     });
-    //   } else {
-    //     return toast.error("pdf file is not valid");
-    //   }
-    // }
-    const imgbbapi = "76188552c6fc6bf4a3912664a291870a";
-    const formData = new FormData();
-    if (file.size > 5000000) {
-      return toast.error("Product Picture size 5MB more than not allowed");
-    } else {
-      if (isValidFileUploaded(file)) {
-        Array.from(image).forEach((item) => {
-          formData.append("image", item);
-        });
-      } else {
-        return toast.error("Product Picture is not valid");
+        sizeVariation: sizeWise?.map((option, index) => ({
+          ...option,
+          photos: sizeWisePhotoList[index],
+        })),
+      };
+      console.log(product);
+
+      if (product?.productTitle === null) {
+        return toast.warn("Please Select Category");
       }
+      await axios.post("http://localhost:5000/api/product", product);
+      toast.success("Product Added");
+      formRef.current.reset();
+    } catch (error) {
+      // console.log(error);
+      return toast.warn(error.response.data.message);
     }
-    const url = `https://api.imgbb.com/1/upload?key=${imgbbapi}`;
-    await fetch(url, {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then(async (imgData) => {
-        if (imgData.success) {
-          const productAdd = {
-            nameB: e.target.productNameBangla.value,
-            nameE: e.target.productNameEnglish.value,
-            bookTranslator: e.target?.bookTranslator?.value,
-            price: e.target.price.value,
-            quantity: e.target.quantity.value,
-            discount: discount,
-            status: e.target.status.value,
-            category: JSON.stringify({
-              categoryName: selectedCategory.name,
-              category_id: selectedCategory._id,
-            }),
-
-            bookFair: e.target.bookFair.value,
-            productTags: tags,
-            descriptionB: e.target.productDetailsBangla.value,
-            descriptionE: e.target.productDetailsEnglish.value,
-            BookSalesInfo: "",
-            image: imgData.data.url,
-          };
-
-          if (productAdd.bookFair === "If the Book of Fair") {
-            productAdd.bookFair = null;
-          }
-          // save Product information to the database
-          try {
-            const data = await axios.post(
-              "https://book-collection-server.vercel.app/api/v1/product",
-              productAdd
-            );
-            refetch();
-            toast.success(data.data.message);
-          } catch (error) {
-            console.log(error);
-            return toast.warn(error.response.data.message);
-          }
-        }
-      });
-
-    e.target.reset();
   };
   return (
     <div className="container bg-warning">
@@ -170,106 +129,27 @@ const AddProductModal = ({ refetch, show, handleClose }) => {
         </Modal.Header>
         <Modal.Body className="rounded">
           <form
-            onSubmit={handleNewProduct}
-            className="mt-2 product-form px-4 mx-2 py-3 rounded row"
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="mt-2 mx-2 rounded row"
           >
             <div className="col-lg-6">
               <label>
-                Book Name in Bangla :{" "}
+                Product Title
                 <span className="text-danger fw-bold fs-5">*</span>
               </label>
               <input
                 type="text"
-                className=""
-                name="productNameBangla"
+                style={{ width: "100%", height: "45px" }}
+                name="productTitle"
                 required
-                placeholder="Product Name in Bangla"
-                id=""
-              />
-            </div>
-            <div className="col-lg-6">
-              <label>
-                Book Name in English:{" "}
-                <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <input
-                type="text"
-                className=""
-                name="productNameEnglish"
-                placeholder="Product Name in English"
-                id=""
-              />
-            </div>
-            <div className="col-lg-4">
-              <label>
-                Book Translator:{" "}
-                <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <input
-                type="text"
-                className=""
-                name="bookTranslator"
-                placeholder="Book Translator"
+                className="ps-2"
+                placeholder="Must Be Uniqe Title"
                 id=""
               />
             </div>
 
-            <div className="col-lg-4">
-              <label>
-                Price : <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <input
-                type="number"
-                className=""
-                required
-                name="price"
-                placeholder="Price"
-                id=""
-              />
-            </div>
-            <div className="col-lg-4">
-              <label>
-                Quantity : <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <input
-                type="number"
-                className=""
-                required
-                name="quantity"
-                placeholder="Quantity"
-                id=""
-              />
-            </div>
             <div className="col-lg-6">
-              <label>Discount : </label>
-              <input
-                onChange={(e) => setDiscount(e.target.value)}
-                type="number"
-                className=""
-                name="discount"
-                placeholder="discount"
-                id=""
-              />
-            </div>
-            <div className="col-lg-6">
-              <label for="status">
-                Status : <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <select
-                style={{ width: "100%", height: "45px" }}
-                required
-                name="status"
-                id="status"
-              >
-                <option selected disabled>
-                  Select A Status
-                </option>
-                <option>in-stock</option>
-                <option>out-of-stock</option>
-                <option>Discontinued</option>
-              </select>
-            </div>
-            <div className="col-lg-4">
               <label for="category">
                 Category : <span className="text-danger fw-bold fs-5">*</span>
               </label>
@@ -278,125 +158,180 @@ const AddProductModal = ({ refetch, show, handleClose }) => {
                 required
                 name="categoryName"
                 id="category"
+                className="ps-2"
               >
                 <option selected disabled>
                   Select A Category
                 </option>
-                {categories?.data?.map((category) => (
-                  <option>{category.name}</option>
-                ))}
-              </select>
-            </div>
 
-            <div className="col-lg-4 mt-1">
-              <label for="book-fair" className="text-danger">
-                If the Book of Fair :{" "}
-              </label>
-              <select
-                style={{ width: "100%", height: "45px" }}
-                required
-                name="bookFair"
-                id="book-fair"
-              >
-                <option className="book-fair"> If the Book of Fair</option>
-                <option>2023</option>
+                <option>Tshirt</option>
               </select>
             </div>
 
             <div className="col-lg-12">
               <label for="product-details-Bangla">
-                Book Details in Bangla:{" "}
+                Product Description
                 <span className="text-danger fw-bold fs-5">*</span>
               </label>
               <textarea
                 className="rounded"
                 id="product-details-Bangla"
-                name="productDetailsBangla"
-                rows="5"
-              />
-            </div>
-            <div className="col-lg-12">
-              <label for="product-details-English">
-                Book Details in English :{" "}
-                <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <textarea
-                className="rounded"
-                id="product-details-English"
-                name="productDetailsEnglish"
-                rows="5"
+                name="description"
+                rows="3"
               />
             </div>
 
-            <div className="col-lg-12">
-              <label>
-                Upload a Book Picture :{" "}
-                <span className="text-danger fw-bold fs-5">*</span>
-              </label>
-              <input
-                multiple
-                onChange={(e) => {
-                  setImage(e.target.files);
-                }}
-                type="file"
-                className="product-picture"
-                required
-                name="image"
-                placeholder="productPicture"
-                id=""
-              />
-            </div>
+            <>
+              <h4 className="">Size wise Variation</h4>
+              <div className="row p-4">
+                {sizeWise?.map((option, index) => (
+                  <>
+                    <div className="col-md-6 " key={index}>
+                      <label className="">Size</label>
 
-            {/* <div className="col-lg-6 mt-2">
-              <label> Upload a Pdf : </label>
-              <input
-                multiple
-                onChange={(e) => {
-                  setProductPdf(e.target.files);
-                }}
-                required
-                type="file"
-                className="product-picture"
-                name="pdf"
-                placeholder="productPicture"
-                id=""
-              />
-            </div> */}
+                      <select
+                        name="size"
+                        className="ps-2"
+                        style={{ width: "100%", height: "45px" }}
+                        required
+                        value={option.size}
+                        onChange={(e) => {
+                          const updatedOptions = [...sizeWise];
+                          updatedOptions[index].size = e.target.value;
+                          setSizeWise(updatedOptions);
+                        }}
+                      >
+                        <option selected disabled>
+                          Select Size
+                        </option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                      </select>
+                    </div>
 
-            <div className="col-lg-12 mt-2">
-              <label>Book Tags : </label>
+                    <div className="col-md-3 ">
+                      <label className="">Color</label>
 
-              {tags.map((tag, index) => (
-                <div className="tag-item" key={index}>
-                  <span className="text">{tag}</span>
-                  <span className="close" onClick={() => removeTag(index)}>
-                    &times;
-                  </span>
-                </div>
-              ))}
-              <textarea
-                onKeyDown={handleKeyDown}
-                type="text"
-                name="productTag"
-                className="tags-input ps-2"
-                placeholder="Product Tag(Write then press entire to add new tag)"
-              />
-            </div>
-            <div className="d-flex justify-content-end mt-4">
-              <div>
-                <button className="btn btn-dark fs-5" onClick={handleClose}>
-                  Cancel
-                </button>
+                      <select
+                        name="color"
+                        className="ps-2"
+                        style={{ width: "100%", height: "45px" }}
+                        required
+                        value={option.color}
+                        onChange={(e) => {
+                          const updatedOptions = [...sizeWise];
+                          updatedOptions[index].color = e.target.value;
+                          setSizeWise(updatedOptions);
+                        }}
+                      >
+                        <option selected disabled>
+                          Select Color
+                        </option>
+                        <option value="Black">Black</option>
+                        <option value="Blue">Blue</option>
+                        <option value="Brown">Brown</option>
+                        <option value="Cyan">Cyan</option>
+                        <option value="Green">Green</option>
+                        <option value="Grey">Grey</option>
+                        <option value="Maroon">Maroon</option>
+                        <option value="Olive">Olive</option>
+                        <option value="Yellow">Yellow</option>
+                        <option value="Red">Red</option>
+                        <option value="White">White</option>
+                        <option value="Orange">Orange</option>
+                      </select>
+                    </div>
+
+                    <div className="col-md-3 ">
+                      <label className="">Price</label>
+                      <input
+                        type="text"
+                        className="ps-2"
+                        style={{ width: "100%", height: "45px" }}
+                        name="price"
+                        value={option.price}
+                        onChange={(e) => {
+                          const updatedOptions = [...sizeWise];
+                          updatedOptions[index].price = e.target.value;
+                          setSizeWise(updatedOptions);
+                        }}
+                        placeholder="Price"
+                        required
+                      />
+                    </div>
+                    <div className="col-md-3 ">
+                      <label className="">Quantity</label>
+                      <input
+                        type="text"
+                        className="ps-2"
+                        style={{ width: "100%", height: "45px" }}
+                        value={option.quantity}
+                        onChange={(e) => {
+                          const updatedOptions = [...sizeWise];
+                          updatedOptions[index].quantity = e.target.value;
+                          setSizeWise(updatedOptions);
+                        }}
+                        placeholder="Quantity"
+                        required
+                      />
+                    </div>
+
+                    <div className="col-md-4 " key={index}>
+                      <label htmlFor={`sizeWisePhotos-${index}`} className=" ">
+                        Product Photos
+                      </label>
+                      <input
+                        type="file"
+                        id={`sizeWisePhotos-${index}`}
+                        className="ps-2 pt-2 pb-1 border"
+                        style={{ width: "100%", height: "45px" }}
+                        name={`sizeWisePhotos-${index}`}
+                        onChange={(e) => handleSizeWisePhotosChange(e, index)}
+                        multiple
+                        required
+                      />
+                    </div>
+
+                    <div className="col-md-2 d-flex" style={{ marginTop: 40 }}>
+                      <FiPlus
+                        onClick={handleAddSizeWise}
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          cursor: "pointer",
+                        }}
+                      />
+
+                      <AiOutlineDelete
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          marginLeft: "10px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleRemoveSizeWise(index)}
+                      />
+                    </div>
+                  </>
+                ))}
               </div>
-              <div>
-                <input
-                  className="btn btn-danger fs-5"
-                  type="submit"
-                  value="Add product"
-                />
-              </div>
+            </>
+
+            <div className="d-flex justify-content-center my-5">
+              <button
+                type="submit"
+                className="bg-danger text-white border-0 py-2 rounded"
+                style={{ width: 175 }}
+                onSubmit={handleSubmit}
+              >
+                Add Product
+              </button>
             </div>
           </form>
+          <ToastContainer className="toast-position" position="top-center" />
         </Modal.Body>
       </Modal>
     </div>

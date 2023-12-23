@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Loading from "../Loading/Loading";
-import useSingleUser from "../../Hooks/useSingleUser";
+
 import axios from "axios";
 
 const Login = () => {
-  const [user, refetch, isLoading] = useSingleUser();
-
-  const token = localStorage.getItem("token");
-  // console.log(user)
   const [userInfo, setUserInfo] = useState({
     email: "",
     password: "",
@@ -52,48 +47,31 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const data = await axios.post(
-        "https://book-collection-server.vercel.app/api/v1/user/login",
-        { email: userInfo?.email, password: userInfo?.password }
-      );
+      const data = await axios.post("http://localhost:5000/api/user/login", {
+        email: userInfo?.email,
+        password: userInfo?.password,
+      });
       localStorage.setItem("token", data.data?.data?.token);
-      navigate("/");
-      refetch();
+      navigate("/dashboard");
     } catch (error) {
+      console.log(error);
       return toast.warn(error.response.data.message);
     }
   };
 
-  //  if(isLoading){
-  //   return(<Loading></Loading>)
-  //  }
-  useEffect(() => {
-    if (!user?.email) {
-      refetch();
-    } else {
-      navigate("/");
-    }
-  }, [refetch, token, user, isLoading, navigate]);
-
   return (
     <div className="bg-white">
       <div className="container">
-        <div className="row">
-          <div className="col-lg-6 col-md-6 col-sm-12 singup-image">
-            <img
-              src="https://boiferry.com/assets/images/register-1.webp"
-              alt=""
-            />
-          </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 signup-part">
+        <div className="d-flex justify-content-center ">
+          <div className=" " style={{ marginTop: 150 }}>
             <form onSubmit={handleSubmit} className="login-form">
               <div>
                 <h3 className="mb-4">
-                  <b className="text-danger">নাফিউনে </b> সাইনইন করুন
+                  <b className="text-danger"></b> Login
                 </h3>
 
                 <label className="mt-2" htmlFor="email">
-                  ইমেইল ঠিকানা
+                  Email
                 </label>
                 <input
                   onChange={emailCheck}
@@ -109,7 +87,7 @@ const Login = () => {
                 )}
 
                 <label className="mt-2" htmlFor="password">
-                  পাসওয়ার্ড
+                  Password
                 </label>
                 <input
                   onChange={passwordCheck}
@@ -123,26 +101,15 @@ const Login = () => {
                 {error?.passWordError && (
                   <p className="text-danger">{error.passWordError}</p>
                 )}
-                <div className="d-flex justify-content-end">
-                  <Link
-                    to="/forgot-password"
-                    className="text-danger forgot-password py-1"
-                  >
-                    পাসওয়ার্ড ভুলে গেছেন?
-                  </Link>
-                </div>
+
                 <input
-                  className="bg-danger text-white border-0 py-2 mt-2 fs-5"
+                  className=" text-white border-0 py-2 mt-2 fs-5"
+                  style={{ backgroundColor: "#12856b" }}
                   type="submit"
-                  value="সাইন ইন"
+                  value="Login"
                 />
-                <p className="mt-3">
-                  আমাদের সাথে একাউন্ট নেই?
-                  <Link className="text-danger" to="/singUp">
-                    {" "}
-                    একাউন্ট করুন
-                  </Link>
-                </p>
+                <p className="mt-2">Admin Email: alaminbamna08@gmail.com</p>
+                <p>Admin Password : 112233</p>
               </div>
             </form>
           </div>
