@@ -8,7 +8,7 @@ const useAllUser = () => {
   const { isLoading, refetch } = useQuery([], () => {
     async function getAllUser() {
       await axios
-        .get("http://localhost:5000/api/user")
+        .get("https://classic-server-jk7f.onrender.com/api/user")
         .then((data) => setAllUser(data))
         .catch((err) => {
           console.log(err);

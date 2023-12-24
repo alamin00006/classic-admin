@@ -107,7 +107,10 @@ const AddProductModal = ({ refetch, show, handleClose }) => {
       if (product?.productTitle === null) {
         return toast.warn("Please Select Category");
       }
-      await axios.post("http://localhost:5000/api/product", product);
+      await axios.post(
+        "https://classic-server-jk7f.onrender.com/api/product",
+        product
+      );
       toast.success("Product Added");
       formRef.current.reset();
     } catch (error) {

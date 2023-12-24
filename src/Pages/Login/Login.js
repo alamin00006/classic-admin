@@ -47,10 +47,13 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const data = await axios.post("http://localhost:5000/api/user/login", {
-        email: userInfo?.email,
-        password: userInfo?.password,
-      });
+      const data = await axios.post(
+        "https://classic-server-jk7f.onrender.com/api/user/login",
+        {
+          email: userInfo?.email,
+          password: userInfo?.password,
+        }
+      );
       localStorage.setItem("token", data.data?.data?.token);
       navigate("/dashboard");
     } catch (error) {

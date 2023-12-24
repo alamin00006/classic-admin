@@ -13,7 +13,7 @@ const useSingleUser = () => {
       } else {
         await axios
           .get(
-            "http://localhost:5000/api/user/me",
+            "https://classic-server-jk7f.onrender.com/api/user/me",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
